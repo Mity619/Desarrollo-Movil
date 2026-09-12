@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 
+import {
+  IonApp,
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent
+} from "@ionic/react";
+
+import "@ionic/react/css/core.css";
+import "@ionic/react/css/normalize.css";
+import "@ionic/react/css/structure.css";
+import "@ionic/react/css/typography.css";
+
 import Loader from "./Loader";
 import ContactList from "./ListaContactos";
 import AddContact from "./AddContacto.tsx";
@@ -16,7 +30,6 @@ function Main() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Simulación carga inicial
   useEffect(() => {
 
     setTimeout(() => {
@@ -48,21 +61,34 @@ function Main() {
   };
 
   return (
-    <>
-      <h1>Contact List</h1>
+    <IonApp>
+      <IonPage>
 
-      {
-        loading
-          ? <Loader />
-          : <>
+        <IonHeader>
+          <IonToolbar>
+            <IonTitle>Contact List</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
+        <IonContent className="ion-padding">
+
+          {loading ? (
+            <Loader />
+          ) : (
+            <>
               <AddContact onAdd={addContact} />
+
               <ContactList
                 contacts={contacts}
                 onDelete={deleteContact}
               />
             </>
-      }
-    </>
+          )}
+
+        </IonContent>
+
+      </IonPage>
+    </IonApp>
   );
 }
 
