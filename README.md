@@ -15,11 +15,6 @@ Repositorio con dos aplicaciones para la clínica MediClinic.
 - Buscador por nombre, apellido o CC (estado en el componente padre)
 - PWA instalable con `vite-plugin-pwa`
 
-**Ejecutar**
-```bash
-cd pwa-pacientes
-npm install
-npm run dev
 
 ## Evidencias
 ** Ejercicio 1 **
@@ -34,5 +29,12 @@ npm run dev
 <img width="1917" height="912" alt="imagen" src="https://github.com/user-attachments/assets/9ee2c296-bf2e-4678-b932-b4e20c182dad" />
 <img width="1917" height="906" alt="imagen" src="https://github.com/user-attachments/assets/2d2262d8-7811-4d68-aa9b-3b267600bc29" />
 <img width="1917" height="906" alt="imagen" src="https://github.com/user-attachments/assets/add4b972-110f-4cd3-925b-4981182b02a1" />
+
+**Ejecutar**
+```bash
+cd pwa-pacientes
+npm install
+npm run dev
+
 
 
