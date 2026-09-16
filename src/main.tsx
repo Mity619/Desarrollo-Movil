@@ -1,83 +1,127 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom/client";
 
-import Loader from "./Loader";
-import ContactList from "./ListaContactos";
-import AddContact from "./AddContacto.tsx";
+import {
+    IonApp,
+    IonPage,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    setupIonicReact,
+} from "@ionic/react";
 
-interface Contact {
-  id: number;
-  name: string;
-  phone: string;
+import "@ionic/react/css/core.css";
+import "@ionic/react/css/normalize.css";
+import "@ionic/react/css/structure.css";
+import "@ionic/react/css/typography.css";
+
+import Loader from "./Loader";
+import TaskList from "./TaskList";
+import AddTask from "./AddTask";
+
+setupIonicReact();
+
+export interface Task {
+    id: number;
+    name: string;
+    state: boolean;
 }
 
+const INITIAL_TASKS: Task[] = [
+    { id: 3, name: "Challenge 3", state: false },
+    { id: 2, name: "Challenge 2", state: true },
+    { id: 1, name: "Challenge 1", state: true },
+    { id: 0, name: "Estudiar Ionic", state: true }
+];
+
+const STORAGE_KEY = "tasks";
+
 function Main() {
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loading, setLoading] = useState(true);
 
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(true);
+    useEffect(() => {
+        let cancelled = false;
 
-  // Simulación carga inicial
-  useEffect(() => {
+        const timer = setTimeout(() => {
+            if (cancelled) return;
 
-    setTimeout(() => {
-      setContacts([
-        { id: 1, name: "Juan", phone: "123456" },
-        { id: 2, name: "Ana", phone: "987654" }
-      ]);
+            const stored = localStorage.getItem(STORAGE_KEY);
+            setTasks(stored ? JSON.parse(stored) : INITIAL_TASKS);
+            setLoading(false);
+        }, 2000);
 
-      setLoading(false);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, []);
 
-    }, 2000);
+    useEffect(() => {
+        if (!loading) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+    }, [tasks, loading]);
 
-  }, []);
+    const handleAdd = useCallback((name: string, state: boolean) => {
+        setTasks((prev) => [
+            ...prev,
+            { id: Date.now(), name, state },
+        ]);
+    }, []);
 
-  const addContact = (name: string, phone: string) => {
-    const newContact: Contact = {
-      id: Date.now(),
-      name,
-      phone
-    };
+    const handleDelete = useCallback((id: number) => {
+        setTasks((prev) => prev.filter((t) => t.id !== id));
+    }, []);
 
-    setContacts(prev => [...prev, newContact]);
-  };
+    const handleToggle = useCallback((id: number) => {
+        setTasks((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, state: !t.state } : t))
+        );
+    }, []);
 
-  const deleteContact = (id: number) => {
-    setContacts(prev =>
-      prev.filter(contact => contact.id !== id)
+    return (
+        <IonApp>
+            <IonPage>
+                <IonHeader>
+                    <IonToolbar>
+                        <IonTitle>Lista de tareas</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
+
+                <IonContent className="ion-padding">
+                    {loading ? (
+                        <Loader message="Cargando tareas..." />
+                    ) : (
+                        <>
+                            <AddTask onAdd={handleAdd} />
+                            <TaskList
+                                tasks={tasks}
+                                onDelete={handleDelete}
+                                onToggle={handleToggle}
+                            />
+                        </>
+                    )}
+                </IonContent>
+            </IonPage>
+        </IonApp>
     );
-  };
-
-  return (
-    <>
-      <h1>Contact List</h1>
-
-      {
-        loading
-          ? <Loader />
-          : <>
-              <AddContact onAdd={addContact} />
-              <ContactList
-                contacts={contacts}
-                onDelete={deleteContact}
-              />
-            </>
-      }
-    </>
-  );
 }
 
 ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
+    document.getElementById("root") as HTMLElement
 ).render(
-  <React.StrictMode>
-    <Main />
-  </React.StrictMode>
+    <React.StrictMode>
+        <Main />
+    </React.StrictMode>
 );
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js")
-      .then(() => console.log("Service Worker registrado"))
-      .catch(err => console.log("Error:", err));
-  });
+    window.addEventListener("load", () => {
+        navigator.serviceWorker
+            .register("/service-worker.js")
+            .then(() => console.log("Service Worker registrado"))
+            .catch((err) => console.error("Error SW:", err));
+    });
 }

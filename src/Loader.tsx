@@ -1,14 +1,16 @@
-function Loader() {
-  return (
-    <div>
-        <img
-            src="/icon-192.png"
-            alt="Contactos"
-            width="200"
-        />
-        <h2>Cargando contactos...</h2>;
-    </div>   
-  )
+import { IonSpinner } from "@ionic/react";
+
+interface LoaderProps {
+    message?: string;
+}
+
+function Loader({ message = "Cargando..." }: LoaderProps) {
+    return (
+        <div style={{ textAlign: "center", marginTop: "30px" }}>
+            <IonSpinner name="crescent" />
+            <p>{message}</p>
+        </div>
+    );
 }
 
 export default Loader;
