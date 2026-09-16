@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom/client";
+import { useNavigate, Navigate } from "react-router-dom";
 
 import {
     IonApp,
@@ -8,8 +9,16 @@ import {
     IonToolbar,
     IonTitle,
     IonContent,
+    IonButtons,
+    IonButton,
+    IonIcon,
     setupIonicReact,
 } from "@ionic/react";
+
+import { IonReactRouter } from "@ionic/react-router";
+import { Route, Routes } from "react-router-dom";
+
+import { logOutOutline } from "ionicons/icons";
 
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/normalize.css";
@@ -19,6 +28,8 @@ import "@ionic/react/css/typography.css";
 import Loader from "./Loader";
 import TaskList from "./TaskList";
 import AddTask from "./AddTask";
+import Login from "./Login";
+import { isLoggedIn, logout } from "./auth";
 
 setupIonicReact();
 
@@ -29,15 +40,18 @@ export interface Task {
 }
 
 const INITIAL_TASKS: Task[] = [
-    { id: 3, name: "Challenge 3", state: false },
+    { id: 4, name: "Challenge 4", state: false },
+    { id: 3, name: "Challenge 3", state: true },
     { id: 2, name: "Challenge 2", state: true },
     { id: 1, name: "Challenge 1", state: true },
-    { id: 0, name: "Estudiar Ionic", state: true }
+    { id: 0, name: "Estudiar Ionic", state: true },
 ];
 
 const STORAGE_KEY = "tasks";
 
 function Main() {
+    const navigate = useNavigate();
+
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -81,31 +95,46 @@ function Main() {
         );
     }, []);
 
-    return (
-        <IonApp>
-            <IonPage>
-                <IonHeader>
-                    <IonToolbar>
-                        <IonTitle>Lista de tareas</IonTitle>
-                    </IonToolbar>
-                </IonHeader>
+    const handleLogout = useCallback(() => {
+        logout();                          // limpia el token
+        navigate("/login", { replace: true });
+    }, [navigate]);
 
-                <IonContent className="ion-padding">
-                    {loading ? (
-                        <Loader message="Cargando tareas..." />
-                    ) : (
-                        <>
-                            <AddTask onAdd={handleAdd} />
-                            <TaskList
-                                tasks={tasks}
-                                onDelete={handleDelete}
-                                onToggle={handleToggle}
-                            />
-                        </>
-                    )}
-                </IonContent>
-            </IonPage>
-        </IonApp>
+    // Ruta protegida: si no hay sesión, al login
+    if (!isLoggedIn()) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return (
+        <IonPage>
+            <IonHeader>
+                <IonToolbar>
+                    <IonTitle>Lista de tareas</IonTitle>
+
+                    <IonButtons slot="end">
+                        <IonButton onClick={handleLogout}>
+                            <IonIcon slot="start" icon={logOutOutline} />
+                            Salir
+                        </IonButton>
+                    </IonButtons>
+                </IonToolbar>
+            </IonHeader>
+
+            <IonContent className="ion-padding">
+                {loading ? (
+                    <Loader message="Cargando tareas..." />
+                ) : (
+                    <>
+                        <AddTask onAdd={handleAdd} />
+                        <TaskList
+                            tasks={tasks}
+                            onDelete={handleDelete}
+                            onToggle={handleToggle}
+                        />
+                    </>
+                )}
+            </IonContent>
+        </IonPage>
     );
 }
 
@@ -113,7 +142,24 @@ ReactDOM.createRoot(
     document.getElementById("root") as HTMLElement
 ).render(
     <React.StrictMode>
-        <Main />
+        <IonApp>
+            <IonReactRouter>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/tasks" element={<Main />} />
+                    <Route
+                        path="/"
+                        element={
+                            <Navigate
+                                to={isLoggedIn() ? "/tasks" : "/login"}
+                                replace
+                            />
+                        }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </IonReactRouter>
+        </IonApp>
     </React.StrictMode>
 );
 
