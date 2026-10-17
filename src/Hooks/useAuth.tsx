@@ -35,7 +35,7 @@ export function useAuth() {
     const login = async (email: string, password: string) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            navigate("/dashboard");
+            navigate("/app");
         } catch (error: unknown) {
             if (error instanceof Error) console.error(error.message);
             else console.error("Error inesperado:", String(error));
