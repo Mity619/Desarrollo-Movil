@@ -1,119 +1,65 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
+import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
+import { IonReactRouter } from "@ionic/react-router";
+import { Route, Navigate } from "react-router-dom"; // v6
 
-import {
-    IonApp,
-    IonPage,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    setupIonicReact,
-} from "@ionic/react";
+import { AuthProvider, AuthContext } from "./Context/useContext";
+import { TasksProvider } from "./Context/TasksContext";
+import Login from "./Pages/Login";
+import Register from "./Pages/Register";
+import Dashboard from "./Pages/Dashboard";
 
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/normalize.css";
 import "@ionic/react/css/structure.css";
 import "@ionic/react/css/typography.css";
 
-import Loader from "./Loader";
-import TaskList from "./TaskList";
-import AddTask from "./AddTask";
+import "@ionic/react/css/padding.css";
+import "@ionic/react/css/float-elements.css";
+import "@ionic/react/css/text-alignment.css";
+import "@ionic/react/css/text-transformation.css";
+import "@ionic/react/css/flex-utils.css";
+import "@ionic/react/css/display.css";
 
 setupIonicReact();
 
-export interface Task {
-    id: number;
-    name: string;
-    state: boolean;
-}
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+    const { user } = React.useContext(AuthContext);
+    return user ? <>{children}</> : <Navigate to="/login" replace />;
+};
 
-const INITIAL_TASKS: Task[] = [
-    { id: 3, name: "Challenge 3", state: false },
-    { id: 2, name: "Challenge 2", state: true },
-    { id: 1, name: "Challenge 1", state: true },
-    { id: 0, name: "Estudiar Ionic", state: true }
-];
-
-const STORAGE_KEY = "tasks";
-
-function Main() {
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        const timer = setTimeout(() => {
-            if (cancelled) return;
-
-            const stored = localStorage.getItem(STORAGE_KEY);
-            setTasks(stored ? JSON.parse(stored) : INITIAL_TASKS);
-            setLoading(false);
-        }, 2000);
-
-        return () => {
-            cancelled = true;
-            clearTimeout(timer);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!loading) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-        }
-    }, [tasks, loading]);
-
-    const handleAdd = useCallback((name: string, state: boolean) => {
-        setTasks((prev) => [
-            ...prev,
-            { id: Date.now(), name, state },
-        ]);
-    }, []);
-
-    const handleDelete = useCallback((id: number) => {
-        setTasks((prev) => prev.filter((t) => t.id !== id));
-    }, []);
-
-    const handleToggle = useCallback((id: number) => {
-        setTasks((prev) =>
-            prev.map((t) => (t.id === id ? { ...t, state: !t.state } : t))
-        );
-    }, []);
-
+function App() {
     return (
         <IonApp>
-            <IonPage>
-                <IonHeader>
-                    <IonToolbar>
-                        <IonTitle>Lista de tareas</IonTitle>
-                    </IonToolbar>
-                </IonHeader>
-
-                <IonContent className="ion-padding">
-                    {loading ? (
-                        <Loader message="Cargando tareas..." />
-                    ) : (
-                        <>
-                            <AddTask onAdd={handleAdd} />
-                            <TaskList
-                                tasks={tasks}
-                                onDelete={handleDelete}
-                                onToggle={handleToggle}
+            <IonReactRouter>
+                <AuthProvider>
+                    <TasksProvider>
+                        <IonRouterOutlet>
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/register" element={<Register />} />
+                            <Route
+                                path="/dashboard"
+                                element={
+                                    <PrivateRoute>
+                                        <Dashboard />
+                                    </PrivateRoute>
+                                }
                             />
-                        </>
-                    )}
-                </IonContent>
-            </IonPage>
+                            {/* Redirección por defecto */}
+                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                        </IonRouterOutlet>
+                    </TasksProvider>
+                </AuthProvider>
+            </IonReactRouter>
         </IonApp>
     );
 }
 
-ReactDOM.createRoot(
-    document.getElementById("root") as HTMLElement
-).render(
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <Main />
+        <App />
     </React.StrictMode>
 );
 
