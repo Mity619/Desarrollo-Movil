@@ -6,12 +6,17 @@ import {
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Route, Navigate } from "react-router-dom";
+import { listOutline, trophyOutline, statsChartOutline } from "ionicons/icons";
 
 import { AuthProvider, useAuth } from "./Context/AuthContext";
-import { Login } from "./Pages/Login";
-import { Tasks } from "./Pages/Tasks";
-import { AvatarUpload } from "./Components/AvatarUpload";
-import { listOutline, personOutline } from "ionicons/icons";
+import { MissionsProvider } from "./Context/MissionsContext";
+import Login from "./Pages/Login";
+import Home from "./Pages/Home";
+import Ranking from "./Pages/Ranking";
+import Results from "./Pages/Results";
+import MissionPhoto from "./Pages/MissionPhoto";
+import MissionMovement from "./Pages/MissionMovement";
+import MissionStillness from "./Pages/MissionStillness";
 
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/normalize.css";
@@ -35,25 +40,27 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div>Cargando...</div>;
-  return user ? <Navigate to="/tabs/tasks" replace /> : <>{children}</>;
+  return user ? <Navigate to="/tabs/missions" replace /> : <>{children}</>;
 }
 
 function TabsLayout() {
   return (
     <IonTabs>
       <IonRouterOutlet>
-        <Route path="/tabs/tasks" element={<Tasks />} />
-        <Route path="/tabs/profile" element={<AvatarUpload />} />
-        <Route path="/tabs" element={<Navigate to="/tabs/tasks" replace />} />
+        <Route path="/tabs/missions" element={<Home />} />
+        <Route path="/tabs/ranking" element={<Ranking />} />
+        <Route path="/tabs/results" element={<Results />} />
+        <Route path="/tabs" element={<Navigate to="/tabs/missions" replace />} />
       </IonRouterOutlet>
       <IonTabBar slot="bottom">
-        <IonTabButton tab="tasks" href="/tabs/tasks">
-          <IonIcon icon={listOutline} />
-          <IonLabel>Tareas</IonLabel>
+        <IonTabButton tab="missions" href="/tabs/missions">
+          <IonIcon icon={listOutline} /><IonLabel>Misiones</IonLabel>
         </IonTabButton>
-        <IonTabButton tab="profile" href="/tabs/profile">
-          <IonIcon icon={personOutline} />
-          <IonLabel>Perfil</IonLabel>
+        <IonTabButton tab="ranking" href="/tabs/ranking">
+          <IonIcon icon={trophyOutline} /><IonLabel>Ranking</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="results" href="/tabs/results">
+          <IonIcon icon={statsChartOutline} /><IonLabel>Resultados</IonLabel>
         </IonTabButton>
       </IonTabBar>
     </IonTabs>
@@ -65,12 +72,17 @@ function App() {
     <IonApp>
       <IonReactRouter>
         <AuthProvider>
-          <IonRouterOutlet>
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/tabs/*" element={<PrivateRoute><TabsLayout /></PrivateRoute>} />
-            <Route path="/" element={<Navigate to="/tabs/tasks" replace />} />
-            <Route path="*" element={<Navigate to="/tabs/tasks" replace />} />
-          </IonRouterOutlet>
+          <MissionsProvider>
+            <IonRouterOutlet>
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/tabs/*" element={<PrivateRoute><TabsLayout /></PrivateRoute>} />
+              <Route path="/missions/1" element={<PrivateRoute><MissionPhoto /></PrivateRoute>} />
+              <Route path="/missions/2" element={<PrivateRoute><MissionMovement /></PrivateRoute>} />
+              <Route path="/missions/3" element={<PrivateRoute><MissionStillness /></PrivateRoute>} />
+              <Route path="/" element={<Navigate to="/tabs/missions" replace />} />
+              <Route path="*" element={<Navigate to="/tabs/missions" replace />} />
+            </IonRouterOutlet>
+          </MissionsProvider>
         </AuthProvider>
       </IonReactRouter>
     </IonApp>
@@ -78,7 +90,5 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  <React.StrictMode><App /></React.StrictMode>
 );

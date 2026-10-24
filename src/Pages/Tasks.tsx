@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTasks } from '../Hooks/useTasks';
-import { IonPage, IonContent, IonList, IonItem, IonLabel, IonCheckbox, IonButton, IonInput, IonIcon, IonSpinner } from '@ionic/react';
+import { IonPage, IonContent, IonList, IonItem, IonLabel, IonCheckbox, IonButton, IonInput, IonIcon} from '@ionic/react';
 import { trashOutline } from 'ionicons/icons';
 
 export function Tasks() {
