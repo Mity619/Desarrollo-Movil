@@ -1,69 +1,41 @@
-import { useEffect, useState } from "react";
-import {
-    createUserWithEmailAndPassword,
-    signOut,
-    signInWithEmailAndPassword,
-    onAuthStateChanged,
-    type User,
-} from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-import { auth } from "../Config/config";
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 export function useAuth() {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true); // <-- nuevo
-    const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-            setUser(firebaseUser);
-            setLoading(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-            if (firebaseUser) {
-                localStorage.setItem(
-                    "user",
-                    JSON.stringify({ uid: firebaseUser.uid, email: firebaseUser.email })
-                );
-            } else {
-                localStorage.removeItem("user");
-            }
-        });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-        return () => unsubscribe();
-    }, []);
+    return () => subscription.unsubscribe();
+  }, []);
 
-    const login = async (email: string, password: string) => {
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            navigate("/app");
-        } catch (error: unknown) {
-            if (error instanceof Error) console.error(error.message);
-            else console.error("Error inesperado:", String(error));
-            throw error; // <-- importante: relanzar para que el Login lo capture
-        }
-    };
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  };
 
-    const logout = async () => {
-        try {
-            await signOut(auth);
-            navigate("/login");
-        } catch (error: unknown) {
-            if (error instanceof Error) console.error(error.message);
-            else console.error("Error inesperado:", String(error));
-            throw error;
-        }
-    };
+  const register = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) throw error;
+  };
 
-    const register = async (email: string, password: string) => {
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            navigate("/login");
-        } catch (error: unknown) {
-            if (error instanceof Error) console.error(error.message);
-            else console.error("Error inesperado:", String(error));
-            throw error;
-        }
-    };
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
 
-    return { user, loading, login, logout, register };
+  return { user, loading, login, register, logout };
 }

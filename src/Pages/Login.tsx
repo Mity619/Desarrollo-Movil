@@ -1,144 +1,65 @@
-import { useState, useContext } from "react";
-import {
-    IonPage,
-    IonContent,
-    IonInput,
-    IonButton,
-    IonItem,
-    IonList,
-    IonText,
-    IonToast,
-    IonSpinner,
-} from "@ionic/react";
-import { AuthContext } from "../Context/useContext";
-import { Link } from "react-router-dom";
+import { useState } from 'react';
+import { useAuth } from '../Context/AuthContext'; 
+import { IonPage, IonContent, IonItem, IonInput, IonButton, IonText, IonSpinner } from '@ionic/react';
 
-export default function Login() {
-    
-    const { login } = useContext(AuthContext);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [errorMsg, setErrorMsg] = useState("");
+export function Login() {
+  const { login, register } = useAuth();
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setErrorMsg("");
-        setLoading(true);
-        try {
-            await login(email, password);
-        } catch (error: unknown) {
-            setErrorMsg(error instanceof Error ? error.message : "Error al iniciar sesión");
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      if (isRegister) {
+        await register(email, password);
+        alert('Revisa tu correo para confirmar la cuenta (si está activado).');
+      } else {
+        await login(email, password);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <IonPage>
-            <IonContent className="ion-padding">
-                <div
-                    style={{
-                        maxWidth: "380px",
-                        margin: "0 auto",
-                        paddingTop: "10vh",
-                    }}
-                >
-                    {/* Encabezado simple */}
-                    <div style={{ marginBottom: "32px" }}>
-                        <h1
-                            style={{
-                                fontSize: "28px",
-                                fontWeight: 700,
-                                margin: 0,
-                                color: "var(--ion-text-color)",
-                            }}
-                        >
-                            Iniciar sesión
-                        </h1>
-                        <IonText color="medium">
-                            <p style={{ margin: "8px 0 0 0", fontSize: "14px" }}>
-                                Ingresa con tu cuenta para continuar
-                            </p>
-                        </IonText>
-                    </div>
-
-                    {/* Formulario */}
-                    <form onSubmit={handleLogin}>
-                        <IonList lines="full" style={{ background: "transparent", padding: 0 }}>
-                            <IonItem style={{ "--padding-start": "0" }}>
-                                <IonInput
-                                    label="Correo electrónico"
-                                    labelPlacement="floating"
-                                    type="email"
-                                    value={email}
-                                    placeholder="tu@email.com"
-                                    autocomplete="email"
-                                    onIonInput={(e) => setEmail(e.detail.value ?? "")}
-                                />
-                            </IonItem>
-
-                            <IonItem style={{ "--padding-start": "0" }}>
-                                <IonInput
-                                    label="Contraseña"
-                                    labelPlacement="floating"
-                                    type="password"
-                                    value={password}
-                                    placeholder="********"
-                                    autocomplete="current-password"
-                                    onIonInput={(e) => setPassword(e.detail.value ?? "")}
-                                />
-                            </IonItem>
-                        </IonList>
-
-                        <IonButton
-                            expand="block"
-                            type="submit"
-                            disabled={!email || !password || loading}
-                            style={{
-                                marginTop: "32px",
-                                "--border-radius": "8px",
-                                height: "44px",
-                                textTransform: "none",
-                                fontWeight: 500,
-                            }}
-                        >
-                            {loading ? <IonSpinner name="crescent" style={{ width: "20px", height: "20px" }} /> : "Ingresar"}
-                        </IonButton>
-                    </form>
-
-                    {/* Link a registro */}
-                    <p
-                        style={{
-                            textAlign: "center",
-                            marginTop: "24px",
-                            fontSize: "14px",
-                            color: "var(--ion-color-medium)",
-                        }}
-                    >
-                        ¿No tienes cuenta?{" "}
-                        <Link
-                            to="/register"
-                            style={{
-                                color: "var(--ion-color-primary)",
-                                fontWeight: 500,
-                                textDecoration: "none",
-                            }}
-                        >
-                            Regístrate
-                        </Link>
-                    </p>
-                </div>
-
-                <IonToast
-                    isOpen={!!errorMsg}
-                    message={errorMsg}
-                    duration={3000}
-                    color="danger"
-                    position="bottom"
-                    onDidDismiss={() => setErrorMsg("")}
-                />
-            </IonContent>
-        </IonPage>
-    );
+  return (
+    <IonPage>
+      <IonContent className="ion-padding">
+        <div style={{ maxWidth: '380px', margin: '0 auto', paddingTop: '10vh' }}>
+          <h1>{isRegister ? 'Crear cuenta' : 'Iniciar sesión'}</h1>
+          <form onSubmit={handleSubmit}>
+            <IonItem>
+              <IonInput
+                label="Correo"
+                type="email"
+                value={email}
+                onIonInput={(e) => setEmail(e.detail.value ?? '')}
+              />
+            </IonItem>
+            <IonItem>
+              <IonInput
+                label="Contraseña"
+                type="password"
+                value={password}
+                onIonInput={(e) => setPassword(e.detail.value ?? '')}
+              />
+            </IonItem>
+            <IonButton expand="block" type="submit" disabled={loading} className="ion-margin-top">
+              {loading ? <IonSpinner name="crescent" /> : isRegister ? 'Registrarse' : 'Entrar'}
+            </IonButton>
+          </form>
+          {error && <IonText color="danger"><p>{error}</p></IonText>}
+          <IonButton fill="clear" expand="block" onClick={() => setIsRegister(!isRegister)}>
+            {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+          </IonButton>
+        </div>
+      </IonContent>
+    </IonPage>
+  );
 }
