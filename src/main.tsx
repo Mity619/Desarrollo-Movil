@@ -1,25 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import {
-    IonApp,
-    IonRouterOutlet,
-    IonTabs,
-    IonTabBar,
-    IonTabButton,
-    IonIcon,
-    IonLabel,
-    setupIonicReact,
-} from "@ionic/react";
+import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Route, Navigate } from "react-router-dom";
-import { peopleOutline, listOutline, nutritionOutline } from "ionicons/icons";
 
-import { AuthProvider, AuthContext } from "./Context/useContext";
-import Login from "./Pages/Login";
-import Register from "./Pages/Register";
-import Contacts from "./Pages/Contacts";
-import Tasks from "./Pages/Task";
-import Fruits from "./Pages/Fruits";
+// Importa tus páginas de sensores
+import Home from "./Pages/Home";
+import GeolocationPage from "./Pages/GeolocationPage";
+import CameraPage from "./Pages/CameraPage";
+import MotionPage from "./Pages/MotionPage";
+import DevicePage from "./Pages/DevicePage";
+import HapticsPage from "./Pages/HapticsPage";
+import FilesystemPage from "./Pages/FilesystemPage";
+import NotificationsPage from "./Pages/NotificationsPage";
 
 import "@ionic/react/css/core.css";
 import "@ionic/react/css/normalize.css";
@@ -34,67 +27,27 @@ import "@ionic/react/css/display.css";
 
 setupIonicReact();
 
-// Desregistrar Service Worker (evita conflicto con Firestore realtime)
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-        for (const registration of registrations) {
-            registration.unregister();
-        }
-    });
-}
-
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-    const { user, loading } = React.useContext(AuthContext);
-    if (loading) return null;
-    return user ? <>{children}</> : <Navigate to="/login" replace />;
-};
-
-const Tabs = () => (
-    <IonTabs>
-        <IonRouterOutlet>
-            <Route path="/app/contacts" element={<Contacts />} />
-            <Route path="/app/tasks" element={<Tasks />} />
-            <Route path="/app/fruits" element={<Fruits />} />
-        </IonRouterOutlet>
-
-        <IonTabBar slot="bottom">
-            <IonTabButton tab="contacts" href="/app/contacts">
-                <IonIcon icon={peopleOutline} />
-                <IonLabel>Contactos</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="tasks" href="/app/tasks">
-                <IonIcon icon={listOutline} />
-                <IonLabel>Tareas</IonLabel>
-            </IonTabButton>
-            <IonTabButton tab="fruits" href="/app/fruits">
-                <IonIcon icon={nutritionOutline} />
-                <IonLabel>Frutas</IonLabel>
-            </IonTabButton>
-        </IonTabBar>
-    </IonTabs>
-);
-
 function App() {
     return (
         <IonApp>
             <IonReactRouter>
-                <AuthProvider>
-                    <IonRouterOutlet>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route
-                            path="/app/*"
-                            element={
-                                <PrivateRoute>
-                                    <Tabs />
-                                </PrivateRoute>
-                            }
-                        />
-                        {/* Redirección desde la raíz directamente a contacts */}
-                        <Route path="/" element={<Navigate to="/app/contacts" replace />} />
-                        <Route path="*" element={<Navigate to="/app/contacts" replace />} />
-                    </IonRouterOutlet>
-                </AuthProvider>
+                <IonRouterOutlet>
+                    {/* Ruta principal con los botones de sensores */}
+                    <Route path="/home" element={<Home />} />
+                    
+                    {/* Rutas para cada sensor */}
+                    <Route path="/sensors/geo" element={<GeolocationPage />} />
+                    <Route path="/sensors/camera" element={<CameraPage />} />
+                    <Route path="/sensors/motion" element={<MotionPage />} />
+                    <Route path="/sensors/device" element={<DevicePage />} />
+                    <Route path="/sensors/haptics" element={<HapticsPage />} />
+                    <Route path="/sensors/filesystem" element={<FilesystemPage />} />
+                    <Route path="/sensors/notifications" element={<NotificationsPage />} />
+
+                    {/* Redirección por defecto */}
+                    <Route path="/" element={<Navigate to="/home" replace />} />
+                    <Route path="*" element={<Navigate to="/home" replace />} />
+                </IonRouterOutlet>
             </IonReactRouter>
         </IonApp>
     );
